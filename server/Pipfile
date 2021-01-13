@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 django = "*"
 graphene-django = "*"
+python-dotenv = "*"
+psycopg2 = "*"
 
 [dev-packages]
 pytest = "*"
