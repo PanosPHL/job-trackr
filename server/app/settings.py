@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "job-trackr",
+    "job_trackr",
     "graphene_django",
 ]
 
