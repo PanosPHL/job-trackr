@@ -35,8 +35,6 @@ def linkedin_job_parser(url):
     "description_content": description_div_content[1]
   }
 
-print(linkedin_job_parser('https://www.linkedin.com/jobs/view/software-engineer-i-at-root-inc-2360916456?refId=58341994-8aee-4bd9-975c-e2d608d3b4ba&trackingId=6gx4VqavDaJ78X4oFLghKg%3D%3D&trk=public_jobs_topcard_title'))
-
 def indeed_job_parser(url):
   page = urlopen(url)
   html = page.read().decode("utf-8")
