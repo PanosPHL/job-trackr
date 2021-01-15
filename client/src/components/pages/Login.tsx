@@ -5,7 +5,7 @@ import { useQuery, gql } from '@apollo/client';
 
 const OAUTH_KEYS = gql`
   query GetOAuthKeys {
-    all_oauth_keys {
+    allOauthKeys {
       githubClientId
       githubClientSecret
     }
@@ -13,6 +13,7 @@ const OAUTH_KEYS = gql`
 `;
 const Login: React.FC<unknown> = () => {
   const { loading, error, data } = useQuery(OAUTH_KEYS);
+  console.log(data);
   return (
     <Container>
       <Paper></Paper>
