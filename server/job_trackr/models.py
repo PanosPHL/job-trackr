@@ -1,6 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser
 
-class OAuthUser(models.Model):
+class OAuthUser(AbstractBaseUser):
   id = models.CharField(primary_key=True, max_length=256)
   site = models.CharField(max_length=24, choices=[
     ('Google', 'Google'),
@@ -10,7 +11,10 @@ class OAuthUser(models.Model):
     ])
   first_name = models.CharField(max_length=64, null=True)
   last_name = models.CharField(max_length=64, null=True)
-  email = models.CharField(max_length=128, null=True)
+  email = models.CharField(max_length=128, unique=True)
+
+  USERNAME_FIELD = 'email'
+  REQUIRED_FIELDS = ['id', 'site']
 
   class Meta:
     db_table = "users"
