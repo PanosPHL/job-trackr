@@ -4,6 +4,7 @@ import Paper from '@material-ui/core/Paper';
 import { useQuery, gql } from '@apollo/client';
 import Button from '@material-ui/core/Button';
 import OauthPopup from 'react-oauth-popup';
+import Cookie from 'js-cookie';
 
 const OAUTH_KEYS = gql`
   query GetOAuthKeys {
@@ -14,16 +15,22 @@ const OAUTH_KEYS = gql`
   }
 `;
 
-const onCode = (code: any, params: any) => {
-  console.log(code, params);
+const onCode = async (code: string = '', params: any) => {
+  // await fetch(`/api/graphql`, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'X-CSRFToken': Cookie.get('csrftoken') || '',
+  //   },
+  // });
+  console.log(code);
 };
 const Login: React.FC<unknown> = () => {
   const { loading, error, data } = useQuery(OAUTH_KEYS);
-  let githubClientId, githubClientSecret;
+  let githubClientId = '';
 
   if (data) {
     githubClientId = data.allOauthKeys.githubClientId;
-    githubClientSecret = data.allOauthKeys.githubClientSecret;
   }
 
   return (

@@ -8,6 +8,7 @@ django = "*"
 graphene-django = "*"
 python-dotenv = "*"
 psycopg2 = "*"
+requests = "*"
 
 [dev-packages]
 pytest = "*"
