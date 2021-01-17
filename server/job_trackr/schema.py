@@ -41,13 +41,9 @@ class Mutations(graphene.ObjectType):
   login_github_user = LoginGithubUser.Field()
 
 
-class Query(graphene.ObjectType):
+class UserQueries(graphene.ObjectType):
   all_users = graphene.List(OAuthUsersType)
   user = graphene.Field(OAuthUsersType, id=graphene.String(), site=graphene.String())
-
-  all_oauth_keys = graphene.Field(OAuthKeys)
-
-  login_github_user = graphene.Field(OAuthUsersType, code=graphene.String())
 
   def resolve_all_users(root, info):
     return OAuthUser.objects.all()
@@ -55,9 +51,15 @@ class Query(graphene.ObjectType):
   def resolve_user(root, info, id, site):
     return OAuthUser.objects.get(id=id, site=site)
 
+class OAuthKeyQueries(graphene.ObjectType):
+  all_oauth_keys = graphene.Field(OAuthKeys)
+
   def resolve_all_oauth_keys(root, info):
     return {
       "githubClientId": os.environ.get("GITHUB_CLIENT_ID")
     }
+
+class Query(UserQueries, OAuthKeyQueries):
+  pass
 
 schema = graphene.Schema(query=Query, mutation=Mutations)
