@@ -2,6 +2,7 @@ import os
 import requests
 import graphene
 from graphene_django import DjangoObjectType
+from django.db.models import Q
 from .models import OAuthUser
 
 class OAuthUsersType(DjangoObjectType):
@@ -19,7 +20,12 @@ class LoginGithubUser(graphene.Mutation):
   class Arguments:
     code = graphene.String()
 
-  user_id = graphene.Int()
+  id = graphene.String()
+  site = graphene.String()
+  first_name = graphene.String()
+  last_name = graphene.String()
+  email = graphene.String()
+  avatar = graphene.String()
 
   def mutate(root, info, code):
     r = requests.post("https://github.com/login/oauth/access_token", params={
@@ -35,7 +41,17 @@ class LoginGithubUser(graphene.Mutation):
       "Authorization": access_token_string
     })
 
-    print(user_r.content)
+    user_info = user_r.json()
+    first_name, last_name = user_info["name"].split()
+
+    try:
+      user = OAuthUser.objects.get(id=user_info["id"], site="GITHUB")
+      return user
+    except:
+      user = OAuthUser(id=user_info["id"], site="GITHUB", first_name=first_name, last_name=last_name, email=(user_info["email"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=user_info["avatar_url"])
+      user.set_unusable_password()
+      return user
+
 
 class Mutations(graphene.ObjectType):
   login_github_user = LoginGithubUser.Field()

@@ -12,6 +12,7 @@ class OAuthUser(AbstractBaseUser):
   first_name = models.CharField(max_length=64, null=True)
   last_name = models.CharField(max_length=64, null=True)
   email = models.CharField(max_length=128, unique=True)
+  avatar = models.CharField(max_length=256, null=True)
 
   USERNAME_FIELD = 'email'
   REQUIRED_FIELDS = ['id', 'site']
