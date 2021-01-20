@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext } from 'react';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
 import { useQuery, gql } from '@apollo/client';
@@ -8,15 +8,18 @@ import OauthPopup from 'react-oauth-popup';
 import Cookie from 'js-cookie';
 import AuthContext from '../../contexts/AuthContext';
 
+interface LoginProps extends RouteComponentProps {}
+
 const OAUTH_KEYS = gql`
   query GetOAuthKeys {
     allOauthKeys {
       githubClientId
+      googleClientId
     }
   }
 `;
 
-const Login: React.FC<unknown> = () => {
+const Login: React.FC<LoginProps> = () => {
   const [OAuthCode, setOAuthCode] = useState('');
   const [site, setSite] = useState('');
 
@@ -25,23 +28,22 @@ const Login: React.FC<unknown> = () => {
 
   const history = useHistory();
 
-  const githubOnCode = useCallback((code: string = '', params: any) => {
+  const onCode = useCallback((code: string = '', params: any) => {
     setOAuthCode(code);
   }, []);
 
   const loginUser = async () => {
     let res;
-    if (site === 'GitHub') {
-      res = await fetch(`/api/graphql/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': Cookie.get('csrftoken') || '',
-        },
-        body: JSON.stringify({
-          query: `
+    res = await fetch(`/api/graphql/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': Cookie.get('csrftoken') || '',
+      },
+      body: JSON.stringify({
+        query: `
         mutation {
-            loginGithubUser(code: "${OAuthCode}") {
+            login${site}User (code: "${OAuthCode}") {
               id
               site
               firstName
@@ -51,26 +53,32 @@ const Login: React.FC<unknown> = () => {
             }
         }
         `,
-        }),
-      });
+      }),
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data.loginGithubUser) {
         await value?.setUser(data.data.loginGithubUser);
-        history.push('/');
+      } else if (data.data.loginGoogleUser) {
+        await value?.setUser(data.data.loginGoogleUser);
       }
+      history.push('/');
     }
   };
 
   useEffect(() => {
-    loginUser();
+    if (OAuthCode && site) {
+      loginUser();
+    }
   }, [OAuthCode]);
 
-  let githubClientId = '';
+  let githubClientId,
+    googleClientId = '';
 
   if (data) {
     githubClientId = data.allOauthKeys.githubClientId;
+    googleClientId = data.allOauthKeys.googleClientId;
   }
 
   return (
@@ -80,13 +88,27 @@ const Login: React.FC<unknown> = () => {
           url={`https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(
             githubClientId
           )}`}
-          onCode={githubOnCode}
+          onCode={onCode}
           onClose={() => console.log('closed')}
           height={600}
           width={600}
           title=""
         >
-          <Button onClick={() => setSite('GitHub')}>GitHub</Button>
+          <Button onClick={() => setSite('Github')}>GitHub</Button>
+        </OauthPopup>
+        <OauthPopup
+          url={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+            googleClientId
+          )}&redirect_uri=${encodeURIComponent(
+            'http://localhost:3000/login'
+          )}&response_type=code&scope=profile email`}
+          onCode={onCode}
+          onClose={() => console.log('closed')}
+          height={600}
+          width={600}
+          title=""
+        >
+          <Button onClick={() => setSite('Google')}>Google</Button>
         </OauthPopup>
       </Paper>
     </Container>

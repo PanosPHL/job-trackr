@@ -1,8 +1,10 @@
 import os
 import requests
 import graphene
+import json
 from graphene_django import DjangoObjectType
 from django.db.models import Q
+from base64 import b64decode
 from .models import OAuthUser
 
 class OAuthUsersType(DjangoObjectType):
@@ -15,8 +17,9 @@ class OAuthKeys(graphene.ObjectType):
     description = "OAuth Keys"
 
   githubClientId = graphene.String()
+  googleClientId = graphene.String()
 
-class LoginGithubUser(graphene.Mutation):
+class LoginUser(graphene.Mutation):
   class Arguments:
     code = graphene.String()
 
@@ -27,6 +30,11 @@ class LoginGithubUser(graphene.Mutation):
   email = graphene.String()
   avatar = graphene.String()
 
+  def mutate(root, info):
+    pass
+
+
+class LoginGithubUser(LoginUser):
   def mutate(root, info, code):
     r = requests.post("https://github.com/login/oauth/access_token", params={
       "client_id": os.environ.get("GITHUB_CLIENT_ID"),
@@ -52,9 +60,36 @@ class LoginGithubUser(graphene.Mutation):
       user.set_unusable_password()
       return user
 
+class LoginGoogleUser(LoginUser):
+  def mutate(root, info, code):
+    r = requests.post("https://oauth2.googleapis.com/token", params={
+      "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+      "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+      "code": code,
+      "redirect_uri": "http://localhost:3000/login",
+      "grant_type": "authorization_code"
+    })
+
+    id_token = r.json()["id_token"].split('.')[1]
+
+    while len(id_token) % 4 != 0:
+      id_token += '='
+
+    user_info = json.loads(b64decode(id_token))
+    first_name, last_name = user_info["name"].split(" ")
+
+    try:
+      user = OAuthUser.objects.get(id=user_info["email"], site="GOOGLE")
+      return user
+    except:
+      user = OAuthUser(id=user_info["email"], site="GOOGLE", first_name=first_name, last_name=last_name, email=(user_info["email"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=user_info["picture"])
+      user.set_unusable_password()
+      return user
+
 
 class Mutations(graphene.ObjectType):
   login_github_user = LoginGithubUser.Field()
+  login_google_user = LoginGoogleUser.Field()
 
 
 class UserQueries(graphene.ObjectType):
@@ -72,7 +107,8 @@ class OAuthKeyQueries(graphene.ObjectType):
 
   def resolve_all_oauth_keys(root, info):
     return {
-      "githubClientId": os.environ.get("GITHUB_CLIENT_ID")
+      "githubClientId": os.environ.get("GITHUB_CLIENT_ID"),
+      "googleClientId": os.environ.get("GOOGLE_CLIENT_ID")
     }
 
 class Query(UserQueries, OAuthKeyQueries):

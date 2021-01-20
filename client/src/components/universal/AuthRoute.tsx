@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Route, Redirect, useParams } from 'react-router-dom';
 import AuthContext from '../../contexts/AuthContext';
 
 interface AuthRouteProps {
@@ -9,8 +9,9 @@ interface AuthRouteProps {
 
 const AuthRoute: React.FC<AuthRouteProps> = ({ path, component }) => {
   const value = useContext(AuthContext);
+  const params = useParams();
 
-  if (value && value.user) {
+  if (value && value.user && params) {
     return <Route path={path} component={component} />;
   } else {
     return <Redirect to="/login" />;
