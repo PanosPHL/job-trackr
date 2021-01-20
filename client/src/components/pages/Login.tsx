@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, gql, useMutation } from '@apollo/client';
 import Button from '@material-ui/core/Button';
 import OauthPopup from 'react-oauth-popup';
 import Cookie from 'js-cookie';
@@ -19,66 +19,58 @@ const OAUTH_KEYS = gql`
   }
 `;
 
-const Login: React.FC<LoginProps> = () => {
-  const [OAuthCode, setOAuthCode] = useState('');
-  const [site, setSite] = useState('');
-
-  const { loading, error, data } = useQuery(OAUTH_KEYS);
-  const value = useContext(AuthContext);
-
-  const history = useHistory();
-
-  const onCode = useCallback((code: string = '', params: any) => {
-    setOAuthCode(code);
-  }, []);
-
-  const loginUser = async () => {
-    let res;
-    res = await fetch(`/api/graphql/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': Cookie.get('csrftoken') || '',
-      },
-      body: JSON.stringify({
-        query: `
-        mutation {
-            login${site}User (code: "${OAuthCode}") {
-              id
+const loginUserCb = (site: string) => {
+  return gql`
+    mutation LoginUser($code: String!) {
+      login${site}User(code: $code) {
+        id
               site
               firstName
               lastName
               email
               avatar
-            }
-        }
-        `,
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.data.loginGithubUser) {
-        await value?.setUser(data.data.loginGithubUser);
-      } else if (data.data.loginGoogleUser) {
-        await value?.setUser(data.data.loginGoogleUser);
       }
-      history.push('/');
     }
+  `;
+};
+
+const Login: React.FC<LoginProps> = () => {
+  const [OAuthCode, setOAuthCode] = useState('');
+  const [site, setSite] = useState('');
+
+  const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
+  const [loginUser, { data: mutationData }] = useMutation(loginUserCb(site));
+  const value = useContext(AuthContext);
+
+  const history = useHistory();
+
+  const onCode = useCallback(async (code: string = '', params: any) => {
+    setOAuthCode(code);
+  }, []);
+
+  const loginUserAction = async () => {
+    const res = await loginUser({ variables: { code: OAuthCode } });
+
+    if (res.data.loginGithubUser) {
+      await value?.setUser(res.data.loginGithubUser);
+    } else if (res.data.loginGoogleUser) {
+      await value?.setUser(res.data.loginGoogleUser);
+    }
+    history.push('/');
   };
 
   useEffect(() => {
     if (OAuthCode && site) {
-      loginUser();
+      loginUserAction();
     }
   }, [OAuthCode]);
 
   let githubClientId,
     googleClientId = '';
 
-  if (data) {
-    githubClientId = data.allOauthKeys.githubClientId;
-    googleClientId = data.allOauthKeys.googleClientId;
+  if (queryData) {
+    githubClientId = queryData.allOauthKeys.githubClientId;
+    googleClientId = queryData.allOauthKeys.googleClientId;
   }
 
   return (
