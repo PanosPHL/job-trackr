@@ -18,6 +18,7 @@ class OAuthKeys(graphene.ObjectType):
 
   githubClientId = graphene.String()
   googleClientId = graphene.String()
+  linkedInClientId = graphene.String()
 
 class LoginUser(graphene.Mutation):
   class Arguments:
@@ -86,10 +87,51 @@ class LoginGoogleUser(LoginUser):
       user.set_unusable_password()
       return user
 
+class LoginLinkedInUser(LoginUser):
+  def mutate(root, info, code):
+    r = requests.get("https://www.linkedin.com/oauth/v2/accessToken", params={
+      "grant_type": "authorization_code",
+      "code": code,
+      "redirect_uri": "http://localhost:3000/login",
+      "client_id": os.environ.get("LINKEDIN_CLIENT_ID"),
+      "client_secret": os.environ.get("LINKEDIN_CLIENT_SECRET")
+    })
+
+    access_token = f'Bearer {r.json()["access_token"]}'
+
+    prof_r = requests.get("https://api.linkedin.com/v2/me", headers={
+      "Authorization": access_token
+    })
+
+    prof_info = prof_r.json()
+
+    email_r = requests.get("https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))", headers={
+      "Authorization": access_token
+    })
+
+    email_info = email_r.json()
+
+    pic_r = requests.get("https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))", headers={
+      "Authorization": access_token
+    })
+
+    pic_info = pic_r.json()
+
+    pic_link = pic_info["profilePicture"]["displayImage~"]["elements"][-1]["identifiers"][0]["identifier"]
+
+    try:
+      user = OAuthUser.objects.get(id=prof_info["id"], site="LINKEDIN")
+      return user
+    except:
+      user = OAuthUser(id=prof_info["id"], site="LINKEDIN", first_name=prof_info["localizedFirstName"], last_name=prof_info["localizedLastName"], email=(email_info["elements"][0]["handle~"]["emailAddress"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=pic_link)
+      user.set_unusable_password()
+      return user
+
 
 class Mutations(graphene.ObjectType):
   login_github_user = LoginGithubUser.Field()
   login_google_user = LoginGoogleUser.Field()
+  login_linkedin_user = LoginLinkedInUser.Field()
 
 
 class UserQueries(graphene.ObjectType):
@@ -108,7 +150,8 @@ class OAuthKeyQueries(graphene.ObjectType):
   def resolve_all_oauth_keys(root, info):
     return {
       "githubClientId": os.environ.get("GITHUB_CLIENT_ID"),
-      "googleClientId": os.environ.get("GOOGLE_CLIENT_ID")
+      "googleClientId": os.environ.get("GOOGLE_CLIENT_ID"),
+      "linkedInClientId": os.environ.get("LINKEDIN_CLIENT_ID")
     }
 
 class Query(UserQueries, OAuthKeyQueries):

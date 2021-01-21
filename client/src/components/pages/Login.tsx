@@ -5,7 +5,6 @@ import Paper from '@material-ui/core/Paper';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import Button from '@material-ui/core/Button';
 import OauthPopup from 'react-oauth-popup';
-import Cookie from 'js-cookie';
 import AuthContext from '../../contexts/AuthContext';
 
 interface LoginProps extends RouteComponentProps {}
@@ -15,6 +14,7 @@ const OAUTH_KEYS = gql`
     allOauthKeys {
       githubClientId
       googleClientId
+      linkedInClientId
     }
   }
 `;
@@ -55,6 +55,8 @@ const Login: React.FC<LoginProps> = () => {
       await value?.setUser(res.data.loginGithubUser);
     } else if (res.data.loginGoogleUser) {
       await value?.setUser(res.data.loginGoogleUser);
+    } else if (res.data.loginLinkedinUser) {
+      await value?.setUser(res.data.loginLinkedinUser);
     }
     history.push('/');
   };
@@ -66,11 +68,13 @@ const Login: React.FC<LoginProps> = () => {
   }, [OAuthCode]);
 
   let githubClientId,
-    googleClientId = '';
+    googleClientId,
+    linkedInClientId = '';
 
   if (queryData) {
     githubClientId = queryData.allOauthKeys.githubClientId;
     googleClientId = queryData.allOauthKeys.googleClientId;
+    linkedInClientId = queryData.allOauthKeys.linkedInClientId;
   }
 
   return (
@@ -101,6 +105,20 @@ const Login: React.FC<LoginProps> = () => {
           title=""
         >
           <Button onClick={() => setSite('Google')}>Google</Button>
+        </OauthPopup>
+        <OauthPopup
+          url={`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${encodeURIComponent(
+            linkedInClientId
+          )}&redirect_uri=${encodeURIComponent(
+            'http://localhost:3000/login'
+          )}&scope=${encodeURIComponent('r_liteprofile r_emailaddress')}`}
+          onCode={onCode}
+          onClose={() => console.log('closed')}
+          height={600}
+          width={600}
+          title=""
+        >
+          <Button onClick={() => setSite('Linkedin')}>LinkedIn</Button>
         </OauthPopup>
       </Paper>
     </Container>
