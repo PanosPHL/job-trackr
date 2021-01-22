@@ -6,6 +6,9 @@ import { useQuery, gql, useMutation } from '@apollo/client';
 import Button from '@material-ui/core/Button';
 import OauthPopup from 'react-oauth-popup';
 import AuthContext from '../../contexts/AuthContext';
+import SiteContext from '../../contexts/SiteContext';
+import { createAuthButtonProps } from '../../constants/Login';
+import OAuthButton from '../buttons/OAuthButton';
 
 interface LoginProps extends RouteComponentProps {}
 
@@ -37,6 +40,11 @@ const loginUserCb = (site: string) => {
 const Login: React.FC<LoginProps> = () => {
   const [OAuthCode, setOAuthCode] = useState('');
   const [site, setSite] = useState('');
+
+  const providerValue = {
+    site,
+    setSite,
+  };
 
   const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
   const [loginUser, { data: mutationData }] = useMutation(loginUserCb(site));
@@ -78,50 +86,30 @@ const Login: React.FC<LoginProps> = () => {
   }
 
   return (
-    <Container>
-      <Paper>
-        <OauthPopup
-          url={`https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(
-            githubClientId
-          )}`}
-          onCode={onCode}
-          onClose={() => console.log('closed')}
-          height={600}
-          width={600}
-          title=""
-        >
-          <Button onClick={() => setSite('Github')}>GitHub</Button>
-        </OauthPopup>
-        <OauthPopup
-          url={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-            googleClientId
-          )}&redirect_uri=${encodeURIComponent(
-            'http://localhost:3000/login'
-          )}&response_type=code&scope=profile email`}
-          onCode={onCode}
-          onClose={() => console.log('closed')}
-          height={600}
-          width={600}
-          title=""
-        >
-          <Button onClick={() => setSite('Google')}>Google</Button>
-        </OauthPopup>
-        <OauthPopup
-          url={`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${encodeURIComponent(
+    <SiteContext.Provider value={providerValue}>
+      <Container>
+        <Paper>
+          {createAuthButtonProps(
+            githubClientId,
+            googleClientId,
             linkedInClientId
-          )}&redirect_uri=${encodeURIComponent(
-            'http://localhost:3000/login'
-          )}&scope=${encodeURIComponent('r_liteprofile r_emailaddress')}`}
-          onCode={onCode}
-          onClose={() => console.log('closed')}
-          height={600}
-          width={600}
-          title=""
-        >
-          <Button onClick={() => setSite('Linkedin')}>LinkedIn</Button>
-        </OauthPopup>
-      </Paper>
-    </Container>
+          ).map((authButtonProp) => {
+            const { url, title, site } = authButtonProp;
+            return (
+              <OAuthButton
+                url={url}
+                onCode={onCode}
+                onClose={() => console.log('closed')}
+                height={600}
+                width={600}
+                title={title}
+                site={site}
+              />
+            );
+          })}
+        </Paper>
+      </Container>
+    </SiteContext.Provider>
   );
 };
 
