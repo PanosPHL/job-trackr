@@ -3,8 +3,6 @@ import { RouteComponentProps, useHistory } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
 import { useQuery, gql, useMutation } from '@apollo/client';
-import Button from '@material-ui/core/Button';
-import OauthPopup from 'react-oauth-popup';
 import AuthContext from '../../contexts/AuthContext';
 import SiteContext from '../../contexts/SiteContext';
 import { createAuthButtonProps } from '../../constants/Login';
@@ -73,13 +71,14 @@ const Login: React.FC<LoginProps> = () => {
     if (OAuthCode && site) {
       loginUserAction();
     }
-  }, [OAuthCode]);
+  }, [OAuthCode, site]);
 
   let githubClientId,
     googleClientId,
     linkedInClientId = '';
 
   if (queryData) {
+    console.log(queryData);
     githubClientId = queryData.allOauthKeys.githubClientId;
     googleClientId = queryData.allOauthKeys.googleClientId;
     linkedInClientId = queryData.allOauthKeys.linkedInClientId;

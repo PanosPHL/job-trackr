@@ -127,10 +127,6 @@ class LoginLinkedInUser(LoginUser):
       user.set_unusable_password()
       return user
 
-class LoginIndeedUser(LoginUser):
-  def mutate(root, info, code):
-    pass
-
 
 class Mutations(graphene.ObjectType):
   login_github_user = LoginGithubUser.Field()
