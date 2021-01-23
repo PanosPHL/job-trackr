@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
+import { makeStyles } from '@material-ui/core';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
 import { useQuery, gql, useMutation } from '@apollo/client';
@@ -35,6 +36,24 @@ const loginUserCb = (site: string) => {
   `;
 };
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: '100vw',
+    height: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    width: '50%',
+    height: '50%',
+    [theme.breakpoints.down('sm')]: {
+      width: '80%',
+      height: '40%',
+    },
+  },
+}));
+
 const Login: React.FC<LoginProps> = () => {
   const [OAuthCode, setOAuthCode] = useState('');
   const [site, setSite] = useState('');
@@ -43,6 +62,10 @@ const Login: React.FC<LoginProps> = () => {
     site,
     setSite,
   };
+
+  const classes = useStyles();
+
+  const { card, root } = classes;
 
   const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
   const [loginUser, { data: mutationData }] = useMutation(loginUserCb(site));
@@ -86,16 +109,17 @@ const Login: React.FC<LoginProps> = () => {
 
   return (
     <SiteContext.Provider value={providerValue}>
-      <Container>
-        <Paper>
+      <Container className={root}>
+        <Paper className={card}>
           {createAuthButtonProps(
             githubClientId,
             googleClientId,
             linkedInClientId
-          ).map((authButtonProp) => {
+          ).map((authButtonProp, i) => {
             const { url, title, site } = authButtonProp;
             return (
               <OAuthButton
+                key={`oauth-button-${i + 1}`}
                 url={url}
                 onCode={onCode}
                 onClose={() => console.log('closed')}
