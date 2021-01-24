@@ -3,11 +3,14 @@ import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import AuthContext from '../../contexts/AuthContext';
 import SiteContext from '../../contexts/SiteContext';
 import { createAuthButtonProps } from '../../constants/Login';
 import OAuthButton from '../buttons/OAuthButton';
+import svg from '../../assets/job-trackr-placeholder.svg';
+import Image from '../misc/Image';
 
 interface LoginProps extends RouteComponentProps {}
 
@@ -45,11 +48,39 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
   },
   card: {
-    width: '50%',
-    height: '50%',
+    width: '400px',
+    minHeight: '525px',
+    padding: theme.spacing(3, 5),
     [theme.breakpoints.down('sm')]: {
-      width: '80%',
-      height: '40%',
+      width: '275px',
+      minHeight: '455px',
+    },
+  },
+  image: {
+    width: '80px',
+    height: '80px',
+  },
+  headerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    height: '190px',
+    justifyContent: 'space-between',
+  },
+  buttonContainer: {
+    display: 'flex',
+    width: '100%',
+    height: '235px',
+    marginTop: '50px',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  oAuthButton: {
+    height: '72px',
+    fontSize: '1.2rem',
+    width: '320px',
+    [theme.breakpoints.down('sm')]: {
+      width: '275px',
     },
   },
 }));
@@ -65,7 +96,14 @@ const Login: React.FC<LoginProps> = () => {
 
   const classes = useStyles();
 
-  const { card, root } = classes;
+  const {
+    card,
+    root,
+    image,
+    headerContainer,
+    buttonContainer,
+    oAuthButton,
+  } = classes;
 
   const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
   const [loginUser, { data: mutationData }] = useMutation(loginUserCb(site));
@@ -101,7 +139,6 @@ const Login: React.FC<LoginProps> = () => {
     linkedInClientId = '';
 
   if (queryData) {
-    console.log(queryData);
     githubClientId = queryData.allOauthKeys.githubClientId;
     googleClientId = queryData.allOauthKeys.googleClientId;
     linkedInClientId = queryData.allOauthKeys.linkedInClientId;
@@ -111,25 +148,36 @@ const Login: React.FC<LoginProps> = () => {
     <SiteContext.Provider value={providerValue}>
       <Container className={root}>
         <Paper className={card}>
-          {createAuthButtonProps(
-            githubClientId,
-            googleClientId,
-            linkedInClientId
-          ).map((authButtonProp, i) => {
-            const { url, title, site } = authButtonProp;
-            return (
-              <OAuthButton
-                key={`oauth-button-${i + 1}`}
-                url={url}
-                onCode={onCode}
-                onClose={() => console.log('closed')}
-                height={600}
-                width={600}
-                title={title}
-                site={site}
-              />
-            );
-          })}
+          <div className={headerContainer}>
+            <Image src={svg} className={image} />
+            <Typography variant="h3">Job Trackr</Typography>
+            <Typography variant="subtitle1">
+              Record your application process
+            </Typography>
+          </div>
+          <hr />
+          <div className={buttonContainer}>
+            {createAuthButtonProps(
+              githubClientId,
+              googleClientId,
+              linkedInClientId
+            ).map((authButtonProp, i) => {
+              const { url, title, site } = authButtonProp;
+              return (
+                <OAuthButton
+                  key={`oauth-button-${i + 1}`}
+                  url={url}
+                  onCode={onCode}
+                  onClose={() => console.log('closed')}
+                  height={600}
+                  width={600}
+                  title={title}
+                  site={site}
+                  className={oAuthButton}
+                />
+              );
+            })}
+          </div>
         </Paper>
       </Container>
     </SiteContext.Provider>

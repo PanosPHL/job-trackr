@@ -10,6 +10,7 @@ interface OAuthButtonProps extends OAuthButtonData {
   height: number;
   width: number;
   title: string;
+  className: string;
 }
 
 const OAuthButton: React.FC<OAuthButtonProps> = ({
@@ -20,6 +21,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
   width,
   title,
   site,
+  className,
 }) => {
   const value = useContext(SiteContext);
   return (
@@ -31,7 +33,11 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
       width={width}
       title={title}
     >
-      <Button onClick={() => value?.setSite(site)}>
+      <Button
+        fullWidth={true}
+        className={className}
+        onClick={() => value?.setSite(site)}
+      >
         {site === 'Linkedin' ? 'LinkedIn' : site}
       </Button>
     </OAuthPopup>
