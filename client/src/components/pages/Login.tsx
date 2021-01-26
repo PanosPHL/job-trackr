@@ -12,6 +12,7 @@ import OAuthButton from '../buttons/OAuthButton';
 import svg from '../../assets/job-trackr-placeholder.svg';
 import Image from '../misc/Image';
 import Cookies from 'js-cookie';
+import createPalette from '@material-ui/core/styles/createPalette';
 
 interface LoginProps extends RouteComponentProps {}
 
@@ -49,6 +50,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.palette.background.default,
   },
   card: {
     width: '400px',
@@ -87,19 +89,22 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     justifyContent: 'start',
     height: '72px',
-    fontSize: '1.8rem',
+    fontSize: '1.6rem',
     padding: 0,
     width: '280px',
     marginTop: theme.spacing(2),
     [theme.breakpoints.down('sm')]: {
-      width: '240px',
-      fontSize: '1.6rem',
+      width: '220px',
+      fontSize: '1.2rem',
       height: '64px',
       margin: theme.spacing(1),
     },
   },
+  githubButton: {
+    backgroundColor: '',
+  },
   horizontalRule: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: theme.palette.divider,
     border: 'none',
     height: '1px',
   },
@@ -122,6 +127,7 @@ const Login: React.FC<LoginProps> = () => {
     buttonContainer,
     oAuthButton,
     horizontalRule,
+    githubButton,
   } = useStyles();
 
   const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
@@ -148,7 +154,7 @@ const Login: React.FC<LoginProps> = () => {
       await value?.setUser(user);
     }
 
-    const jwt = await fetch('/api/session/jwt/', {
+    await fetch('/api/session/jwt/', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -178,7 +184,7 @@ const Login: React.FC<LoginProps> = () => {
 
   return (
     <SiteContext.Provider value={providerValue}>
-      <Container className={root}>
+      <main className={root}>
         <Paper className={card}>
           <div className={headerContainer}>
             <Image src={svg} className={image} />
@@ -194,6 +200,11 @@ const Login: React.FC<LoginProps> = () => {
               googleClientId,
               linkedInClientId
             ).map(({ url, title, site, img }, i) => {
+              let authButtonStyle = '';
+              if (site === 'Github') {
+                authButtonStyle = githubButton;
+              }
+
               return (
                 <OAuthButton
                   key={`oauth-button-${i + 1}`}
@@ -204,14 +215,16 @@ const Login: React.FC<LoginProps> = () => {
                   width={600}
                   title={title}
                   site={site}
-                  className={oAuthButton}
+                  className={
+                    oAuthButton + (authButtonStyle ? ` ${authButtonStyle}` : '')
+                  }
                   img={img}
                 />
               );
             })}
           </div>
         </Paper>
-      </Container>
+      </main>
     </SiteContext.Provider>
   );
 };

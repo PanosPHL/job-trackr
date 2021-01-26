@@ -18,13 +18,15 @@ interface OAuthButtonProps extends OAuthButtonData {
 
 const useStyles = makeStyles((theme) => ({
   logo: {
-    height: '72px',
+    height: '54px',
+    marginLeft: theme.spacing(4),
     [theme.breakpoints.down('sm')]: {
-      height: '64px',
+      height: '46px',
+      marginLeft: theme.spacing(3),
     },
   },
   buttonText: {
-    marginLeft: '8%',
+    marginLeft: theme.spacing(4),
   },
 }));
 
@@ -53,7 +55,6 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
       <Button
         fullWidth={true}
         className={className}
-        variant="outlined"
         onClick={() => value?.setSite(site)}
       >
         <Image src={img} className={logo} />
