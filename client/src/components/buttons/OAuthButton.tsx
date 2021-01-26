@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
+import { makeStyles } from '@material-ui/core';
 import OAuthPopup from 'react-oauth-popup';
 import Button from '@material-ui/core/Button';
+import Image from '../misc/Image';
 import SiteContext from '../../contexts/SiteContext';
 import { OAuthButtonData } from '../../constants/Login';
 
@@ -11,7 +13,20 @@ interface OAuthButtonProps extends OAuthButtonData {
   width: number;
   title: string;
   className: string;
+  img: string;
 }
+
+const useStyles = makeStyles((theme) => ({
+  logo: {
+    height: '72px',
+    [theme.breakpoints.down('sm')]: {
+      height: '64px',
+    },
+  },
+  buttonText: {
+    marginLeft: '8%',
+  },
+}));
 
 const OAuthButton: React.FC<OAuthButtonProps> = ({
   url,
@@ -22,8 +37,10 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
   title,
   site,
   className,
+  img,
 }) => {
   const value = useContext(SiteContext);
+  const { logo, buttonText } = useStyles();
   return (
     <OAuthPopup
       url={url}
@@ -36,9 +53,13 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
       <Button
         fullWidth={true}
         className={className}
+        variant="outlined"
         onClick={() => value?.setSite(site)}
       >
-        {site === 'Linkedin' ? 'LinkedIn' : site}
+        <Image src={img} className={logo} />
+        <span className={buttonText}>
+          {site === 'Linkedin' ? 'LinkedIn' : site}
+        </span>
       </Button>
     </OAuthPopup>
   );

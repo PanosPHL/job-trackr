@@ -49,10 +49,11 @@ const useStyles = makeStyles((theme) => ({
   },
   card: {
     width: '400px',
-    minHeight: '525px',
+    minHeight: '555px',
     padding: theme.spacing(3, 5),
+    boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.4)',
     [theme.breakpoints.down('sm')]: {
-      width: '275px',
+      width: '250px',
       minHeight: '455px',
     },
   },
@@ -66,22 +67,38 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     height: '190px',
     justifyContent: 'space-between',
+    padding: theme.spacing(1),
   },
   buttonContainer: {
     display: 'flex',
     width: '100%',
     height: '235px',
-    marginTop: '50px',
+    marginTop: theme.spacing(4),
     flexDirection: 'column',
     alignItems: 'center',
+    [theme.breakpoints.down('sm')]: {
+      marginTop: theme.spacing(2),
+    },
   },
   oAuthButton: {
+    display: 'flex',
+    justifyContent: 'start',
     height: '72px',
-    fontSize: '1.2rem',
-    width: '320px',
+    fontSize: '1.8rem',
+    padding: 0,
+    width: '280px',
+    marginTop: theme.spacing(2),
     [theme.breakpoints.down('sm')]: {
-      width: '275px',
+      width: '240px',
+      fontSize: '1.6rem',
+      height: '64px',
+      margin: theme.spacing(1),
     },
+  },
+  horizontalRule: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    border: 'none',
+    height: '1px',
   },
 }));
 
@@ -94,8 +111,6 @@ const Login: React.FC<LoginProps> = () => {
     setSite,
   };
 
-  const classes = useStyles();
-
   const {
     card,
     root,
@@ -103,7 +118,8 @@ const Login: React.FC<LoginProps> = () => {
     headerContainer,
     buttonContainer,
     oAuthButton,
-  } = classes;
+    horizontalRule,
+  } = useStyles();
 
   const { loading, error, data: queryData } = useQuery(OAUTH_KEYS);
   const [loginUser, { data: mutationData }] = useMutation(loginUserCb(site));
@@ -155,14 +171,13 @@ const Login: React.FC<LoginProps> = () => {
               Record your application process
             </Typography>
           </div>
-          <hr />
+          <hr className={horizontalRule} />
           <div className={buttonContainer}>
             {createAuthButtonProps(
               githubClientId,
               googleClientId,
               linkedInClientId
-            ).map((authButtonProp, i) => {
-              const { url, title, site } = authButtonProp;
+            ).map(({ url, title, site, img }, i) => {
               return (
                 <OAuthButton
                   key={`oauth-button-${i + 1}`}
@@ -174,6 +189,7 @@ const Login: React.FC<LoginProps> = () => {
                   title={title}
                   site={site}
                   className={oAuthButton}
+                  img={img}
                 />
               );
             })}
