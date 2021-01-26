@@ -2,6 +2,7 @@ import os
 import requests
 import graphene
 import json
+import jwt
 from graphene_django import DjangoObjectType
 from django.db.models import Q
 from base64 import b64decode
@@ -10,7 +11,7 @@ from .models import OAuthUser
 class OAuthUsersType(DjangoObjectType):
   class Meta:
     model = OAuthUser
-    fields = ("id", "first_name", "last_name", "email", "site")
+    fields = ("id", "first_name", "last_name", "email", "site", "avatar")
 
 class OAuthKeys(graphene.ObjectType):
   class Meta:
@@ -24,12 +25,7 @@ class LoginUser(graphene.Mutation):
   class Arguments:
     code = graphene.String()
 
-  id = graphene.String()
-  site = graphene.String()
-  first_name = graphene.String()
-  last_name = graphene.String()
-  email = graphene.String()
-  avatar = graphene.String()
+  user = graphene.Field(OAuthUsersType)
 
   def mutate(root, info):
     pass
@@ -54,12 +50,13 @@ class LoginGithubUser(LoginUser):
     first_name, last_name = user_info["name"].split()
 
     try:
-      user = OAuthUser.objects.get(id=user_info["id"], site="GITHUB")
-      return user
+      user = OAuthUser.objects.get(id=user_info["id"], site="GitHub")
     except:
-      user = OAuthUser(id=user_info["id"], site="GITHUB", first_name=first_name, last_name=last_name, email=(user_info["email"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=user_info["avatar_url"])
+      user = OAuthUser(id=user_info["id"], site="GitHub", first_name=first_name, last_name=last_name, email=(user_info["email"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=user_info["avatar_url"])
       user.set_unusable_password()
-      return user
+    finally:
+      info.context.user = user
+      return { "user": user }
 
 class LoginGoogleUser(LoginUser):
   def mutate(root, info, code):
@@ -81,11 +78,12 @@ class LoginGoogleUser(LoginUser):
 
     try:
       user = OAuthUser.objects.get(id=user_info["email"], site="GOOGLE")
-      return user
     except:
       user = OAuthUser(id=user_info["email"], site="GOOGLE", first_name=first_name, last_name=last_name, email=(user_info["email"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=user_info["picture"])
       user.set_unusable_password()
-      return user
+    finally:
+      info.context.user = user
+      return { "user": user }
 
 class LoginLinkedInUser(LoginUser):
   def mutate(root, info, code):
@@ -121,11 +119,12 @@ class LoginLinkedInUser(LoginUser):
 
     try:
       user = OAuthUser.objects.get(id=prof_info["id"], site="LINKEDIN")
-      return user
     except:
       user = OAuthUser(id=prof_info["id"], site="LINKEDIN", first_name=prof_info["localizedFirstName"], last_name=prof_info["localizedLastName"], email=(email_info["elements"][0]["handle~"]["emailAddress"] or f"{first_name}_{last_name}_{user_info['id']}@job-trackr.com"), avatar=pic_link)
       user.set_unusable_password()
-      return user
+    finally:
+      info.context.user = user
+      return { "user": user }
 
 
 class Mutations(graphene.ObjectType):

@@ -11,6 +11,7 @@ import { createAuthButtonProps } from '../../constants/Login';
 import OAuthButton from '../buttons/OAuthButton';
 import svg from '../../assets/job-trackr-placeholder.svg';
 import Image from '../misc/Image';
+import Cookies from 'js-cookie';
 
 interface LoginProps extends RouteComponentProps {}
 
@@ -28,12 +29,14 @@ const loginUserCb = (site: string) => {
   return gql`
     mutation LoginUser($code: String!) {
       login${site}User(code: $code) {
-        id
-              site
-              firstName
-              lastName
-              email
-              avatar
+        user {
+          id
+          site
+          firstName
+          lastName
+          email
+          avatar
+        }
       }
     }
   `;
@@ -132,15 +135,28 @@ const Login: React.FC<LoginProps> = () => {
   }, []);
 
   const loginUserAction = async () => {
+    let user;
     const res = await loginUser({ variables: { code: OAuthCode } });
-
     if (res.data.loginGithubUser) {
-      await value?.setUser(res.data.loginGithubUser);
+      user = res.data.loginGithubUser.user;
+      await value?.setUser(user);
     } else if (res.data.loginGoogleUser) {
-      await value?.setUser(res.data.loginGoogleUser);
+      user = res.data.loginGoogleUser.user;
+      await value?.setUser(user);
     } else if (res.data.loginLinkedinUser) {
-      await value?.setUser(res.data.loginLinkedinUser);
+      user = res.data.loginLinkedinUser.user;
+      await value?.setUser(user);
     }
+
+    const jwt = await fetch('/api/session/jwt/', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': Cookies.get('csrftoken') || '',
+      },
+      body: JSON.stringify({ user }),
+    });
+
     history.push('/');
   };
 
