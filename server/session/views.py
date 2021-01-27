@@ -13,6 +13,5 @@ def csrf_token(request):
 def get_jwt(request):
   response = HttpResponse('TOKEN')
   json_data = json.loads(request.body)
-  print(json_data["user"])
   response.set_cookie('TOKEN', generate_jwt(json_data["user"]))
   return response

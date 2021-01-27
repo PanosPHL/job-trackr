@@ -19,13 +19,12 @@ interface OAuthButtonProps extends OAuthButtonData {
 const useStyles = makeStyles((theme) => ({
   logo: {
     height: '54px',
-    marginLeft: theme.spacing(4),
     [theme.breakpoints.down('sm')]: {
       height: '46px',
-      marginLeft: theme.spacing(3),
     },
   },
   buttonText: {
+    textAlign: 'center',
     marginLeft: theme.spacing(4),
   },
 }));

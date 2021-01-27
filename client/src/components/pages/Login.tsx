@@ -87,17 +87,17 @@ const useStyles = makeStyles((theme) => ({
   },
   oAuthButton: {
     display: 'flex',
-    justifyContent: 'start',
+    justifyContent: 'flex-start',
     height: '72px',
     fontSize: '1.6rem',
-    padding: 0,
-    width: '280px',
+    padding: theme.spacing(0, 2),
+    width: '250px',
     marginTop: theme.spacing(2),
     [theme.breakpoints.down('sm')]: {
-      width: '220px',
+      width: '208px',
       fontSize: '1.2rem',
       height: '64px',
-      margin: theme.spacing(1),
+      margin: theme.spacing(1, 0),
     },
   },
   githubButton: {
