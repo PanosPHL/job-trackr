@@ -18,5 +18,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/graphql/', include('job_trackr.urls'))
+    path('api/graphql/', include('job_trackr.urls')),
+    path('api/session/', include('session.urls'))
 ]

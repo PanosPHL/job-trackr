@@ -1,12 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { ThemeProvider } from '@material-ui/core/styles';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import theme from './theme';
+import { ApolloProvider } from '@apollo/client';
+import client from './apollo';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={theme}>
+      <Router>
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      </Router>
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
